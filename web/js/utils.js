@@ -110,31 +110,6 @@ export function clone_class(original) {
 		}
 	};
 }
-
-export function remove_elem_arr(array, chk_fn) {
-	let shift = 0;
-
-	for (let i = 0; i < array.length; ++i) {
-		if (chk_fn(array[i], i, array))
-			++ shift;
-		else if (shift > 0)
-			array[i - shift] = array[i];
-	}
-
-	array.length -= shift;
-}
-
-export function reverse_array(arr, start, end) {
-	// Function to reverse a portion of the array
-
-	while (start < end) {
-		let temp = arr[start];
-		arr[start] = arr[end];
-		arr[end] = temp;
-		start++;
-		end--;
-	}
-}
 export function equal_array(a, b, m = false, w = null) {
 	if (a.length !== b.length)
 		return false;
@@ -170,82 +145,6 @@ export function update_dict(a, b) {
 		if (b.hasOwnProperty(key))
 			a[key] = b[key];
 }
-
-export class RingBuffer {
-	constructor(size) {
-		this.buffer = [];
-		this.prev = [];
-		this.index = 0;
-		this.size = size;
-		this.count = 0;
-		this.dirty = false;
-	}
-
-	push(value) {
-		this.buffer[this.index] = value;
-		this.index = (this.index + 1) % this.size;
-		++ this.count;
-		if (this.count > this.size) {
-			this.count = this.size;
-			this.dirty = true;
-		}
-	}
-
-	at(index) {
-		if (index >= this.count)
-			return undefined;
-		index = (this.index - index - 1 + this.size) % this.size;
-		return this.buffer[index];
-	}
-
-	*[Symbol.iterator]() {
-		for (let i = 0; i < this.count; ++ i)
-			yield this.at(i);
-	}
-
-	clean() {
-    if (!this.dirty) return;
-		this.dirty = false;
-		this.prev.length = 0;
-		for (let i = 0; i < this.count; ++ i)
-			this.prev[i] = this.at(i);
-
-		let temp = this.buffer;
-		this.buffer = this.prev;
-		this.prev = temp;
-		this.index = this.count % this.size;
-	}
-
-	resize(size) {
-		if (this.dirty)
-			this.clean();
-
-		this.buffer.length = size;
-		this.prev.length = 0;
-		this.size = size;
-		if (this.size < this.count)
-			this.count = this.size;
-		this.index = this.count % size;
-	}
-
-	pull(index) {
-		if (index >= this.count) return undefined;
-		
-		this.clean();
-
-		let actual_index = (this.index - index - 1 + this.size) % this.size,
-			value = this.buffer[actual_index];
-
-		for (let i = actual_index; i != this.index; i = (i + 1) % this.size)
-			this.buffer[i] = this.buffer[(i + 1) % this.size];
-
-		-- this.count;
-		this.index = (this.index - 1 + this.size) % this.size;
-
-		return value;
-	}
-}
-
 export function random_id() {
 	return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
