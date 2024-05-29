@@ -105,25 +105,3 @@ export function clone_class(original) {
 export function random_id() {
 	return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
-export function indent_str(strings, ...values) {
-	// Build the string as normal, combining all parts
-	let fullString = strings.reduce((acc, str, i) => acc + (values[i - 1] || '') + str);
-
-	// Split the string into lines
-	let lines = fullString.split('\n');
-
-	// Remove the first line if it is empty (caused by a newline at the beginning of a template literal)
-	if (lines[0].match(/^\s*$/))
-		lines.shift();
-
-	// Find the smallest indentation (spaces or tabs) from the remaining lines that have content
-	const smallestIndent = lines.length > 0
-		? Math.min(...lines.filter(line => line.trim()).map(line => line.match(/^[ \t]*/)[0].length))
-		: 0;
-
-	// Remove the smallest indentation from all lines
-	lines = lines.map(line => line.substring(smallestIndent));
-
-	// Combine the trimmed lines
-	return lines.join('\n');
-}
