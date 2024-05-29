@@ -45,11 +45,6 @@ import * as lib0246 from "./utils.js";
 export let defs, node_defs = [], combo_defs = [], type_defs = new Set();
 
 let rgthree_utils;
-export function help_option(node, content, app) {
-	// Guess this is good enough
-	// rgthree_exec("addHelpMenuItem", node, content, app);
-}
-
 lib0246.hijack(app, "registerNodesFromDefs", async function (_defs) {
 	if (!this.mark && !Array.isArray(type_defs)) {
 		defs = _defs;
@@ -108,49 +103,6 @@ function init_update_direct(node, name, callback) {
 		}
 	});
 }
-
-function link_shift_up(node, arr, index, flag, data) {
-	// Disconnect event handler
-	const old_func = node.onConnectionsChange;
-	node.onConnectionsChange = null;
-	const old_in_func = node.onConnectInput;
-	node.onConnectInput = null;
-	const old_out_func = node.onConnectOutput;
-	node.onConnectOutput = null;
-
-	// Shift up all links
-
-	if (flag) {
-		if (arr[index].links.length === 0) {
-			node.removeOutput(index);
-			
-			for (let i = 0, c = 0; i < arr.length; ++ i) {
-				if (node?.onConnectExpand?.("shift_output", arr[i].name, i, ...data))
-					continue;
-				arr[i].name = node?.onNameExpand?.(true, LiteGraph.OUTPUT, arr[i].name, i, ...data) ?? `${arr[i].type}:${c}`;
-				++ c;
-			}
-		}
-	} else {
-		node.removeInput(index);
-
-		for (let i = 0, c = 0; i < arr.length; ++ i) {
-			if (node?.onConnectExpand?.("shift_input", arr[i].name, i, ...data))
-				continue;
-			arr[i].name = node?.onNameExpand?.(true, LiteGraph.INPUT, arr[i].name, i, ...data) ?? `${c}:${arr[i].type}`;
-			++ c;
-		}
-	}
-	app.canvas.setDirty(true);
-	
-	// Revert things back
-	node.onConnectionsChange = old_func;
-	node.onConnectInput = old_in_func;
-	node.onConnectOutput = old_out_func;
-
-	return;
-}
-
 const BLACKLIST = [
 	"_way_in",
 	"_way_out",
@@ -187,10 +139,8 @@ const LEGACY_BLACKLIST = {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-const RESIZE_OBSERVER = Symbol("resize_observer");
-export const SOFT_REMOVE = Symbol("soft_remove");
-
+Symbol("resize_observer");
+Symbol("soft_remove");
 function dom_resize_calc(node, widget) {
 	// Very bruh
 	widget.computedHeight = null;
@@ -211,162 +161,9 @@ function dom_resize_calc(node, widget) {
 		widget.options.onHide = old_hide;
 	app.canvas.setDirty(true);
 }
-
-function setup_dom_resize(node, widget) {
-	widget.element.style.resize = "vertical";
-	(widget[RESIZE_OBSERVER] = new ResizeObserver(() => {
-		widget.element.style.setProperty("--comfy-widget-height", String(Math.max(50, widget.element.offsetHeight + 20)));
-		dom_resize_calc(node, widget);
-	})).observe(widget.element);
-	// [TODO] Prevent resize out of bound and preserve --comfy-widget-height when cloning or configure
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function setup_sole_pin(node, name, side_name, side_mode, shape) {
-	const upper_name = side_name.charAt(0).toUpperCase() + side_name.slice(1),
-		more_name = side_name + "s";
-
-	lib0246.hijack(node, "onConnect" + upper_name, function () {
-		if (this.mark) {
-			if (this.self[more_name][arguments[0]].name !== name)
-				return true;
-
-			this.self[more_name][arguments[0]].shape = shape;
-			this.self[more_name][arguments[0]].type = arguments[2].type;
-			this.self[more_name][arguments[0]].name = side_mode === LiteGraph.OUTPUT ? `${arguments[2].type}:${name}` : `${name}:${arguments[2].type}`;
-		}
-	});
-
-	lib0246.hijack(node, "onConnectionsChange", function (type, index, connected, link_info) {
-		if (this.mark) {
-			if (link_info === null) {
-				// Clean up when copy paste or template load
-				if (this.self[more_name])
-					for (let i = 0; i < this.self[more_name].length; ++ i)
-						if (this.self[more_name][i].name === (
-							side_mode === LiteGraph.OUTPUT ?
-							`${this.self[more_name][i].type}:${name}` :
-							`${name}:${this.self[more_name][i].type}`)
-						) {
-							this.self[more_name][i].type = "*";
-							this.self[more_name][i].name = name;
-							break;
-						}
-				return;
-			}
-			
-			if (
-				!connected &&
-				index < this.self[more_name].length &&
-				this.self[more_name][index].name === (
-					side_mode === LiteGraph.OUTPUT ?
-					`${this.self[more_name][index].type}:${name}` :
-					`${name}:${this.self[more_name][index].type}`
-				) &&
-				type === side_mode
-			) {
-				this.self[more_name][index].type = "*";
-				this.self[more_name][index].name = name;
-			}
-		}
-	});
-}
-
-function expand_y_save(node, off, func) {
-	const old_w = node.size[0],
-		calc_h = node.size[1] + LiteGraph.NODE_SLOT_HEIGHT * off;
-	if (!func()) {
-		node.size[0] = old_w;
-		if (node.size[1] !== calc_h && node.flex_data)
-			node.size[1] = calc_h;
-	}
-}
-
-function setup_expand(node, kind, real, pin, shape, callback) {
-	const raw_name = kind === LiteGraph.INPUT ? "input" : "output",
-		upper_name = raw_name.charAt(0).toUpperCase() + raw_name.slice(1),
-		more_name = raw_name + "s";
-
-	node["add" + upper_name](pin, "*");
-
-	if (node[more_name])
-		for (let i = 0; i < node[more_name].length; ++ i)
-			if (node[more_name][i].name === pin) {
-				node[more_name][i].shape = shape;
-				break;
-			}
-
-	lib0246.hijack(node, "configure", function (data) {
-		if (this.mark && this.self[more_name])
-			for (let i = 0; i < this.self[more_name].length; ++ i) {
-				if (!node?.onConnectExpand?.("configure_expand", this.self[more_name][i].name, data, raw_name, i))
-					++ real[raw_name];
-			}
-	});
-
-	lib0246.hijack(node, "onConnect" + upper_name, function (
-		this_slot_index,
-		other_slot_type,
-		other_slot_obj,
-		other_node,
-		other_slot_index
-	) {
-		if (this.mark) {
-			this.self.__update = true;
-
-			if (
-				node?.onConnectExpand?.(`connect_expand_${raw_name}`, this.self[more_name][this_slot_index].name, ...arguments) &&
-				this.self[more_name][this_slot_index].name !== pin
-			) {
-				this.res = true;
-				return;
-			}
-
-			const res = callback.apply({ self: this.self, name: raw_name, mode: 0 }, arguments);
-			if (res === true) {
-				this.res = true;
-				return;
-			}
-			if (res === false) {
-				this.res = false;
-				return;
-			}
-
-			expand_y_save(this.self, 1, () => {
-				callback.call({ self: this.self, name: raw_name, mode: 1 }, real[raw_name] ++, this.self[more_name][this_slot_index].type, this_slot_index);
-				this.self["add" + upper_name](pin, "*");
-			});
-			this.self[more_name][this.self[more_name].length - 1].shape = shape;
-
-			app.canvas.setDirty(true, false);
-			this.res = true;
-		}
-	});
-
-	lib0246.hijack(node, "onConnectionsChange", function (type, index, connected, link_info) {
-		if (this.mark) {
-			const args = arguments;
-			if (link_info === null) {
-				// Clean up when copy paste or template load
-				if (this.self[more_name])
-					lib0246.remove_elem_arr(
-						this.self[more_name],
-						(e) => !node?.onConnectExpand?.(`connection_change_remove_expand_${raw_name}`, e.name, e, ...args)
-					);
-				this.self.computeSize();
-				app.canvas.setDirty(true, false);
-				return;
-			}
-			
-			if (!connected && type === kind)
-				expand_y_save(this.self, -1, callback.bind({ self: this.self, name: raw_name, mode: 2 }, ...args));
-		}
-	});
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -839,150 +636,6 @@ function querify_output_pin(widget, from, ops) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function single_impl_input_raw(inst, app, real, shape_in) {
-	setup_expand(inst, LiteGraph.INPUT, real, "...", shape_in, function () {
-		switch (this.mode) {
-			case 0: {
-				if (this.self.inputs[arguments[0]].link !== null) {
-					app.graph.links[this.self.inputs[arguments[0]].link].replaced = true;
-					return true;
-				}
-				this.self.inputs[arguments[0]].type = arguments[2].type;
-			} break;
-			case 1: {
-				this.self.inputs[arguments[2]].name = this.self?.onNameExpand?.(false, LiteGraph.INPUT, ...arguments) ?? `${arguments[0]}:${arguments[1]}`;
-			} break;
-			case 2: {
-				if (arguments[0] === LiteGraph.INPUT) {
-					let link_info = arguments[3];
-					if (this.self?.onConnectExpand?.("single_impl_input_remove", this.self.inputs[link_info.target_slot]?.name, ...arguments)) // || link_info.replaced)
-						return true;
-					link_shift_up(this.self, this.self.inputs, link_info.target_slot, false, arguments);
-					-- real.input;
-				}
-			} break;
-		}
-	});
-}
-
-function single_impl_output_raw(inst, app, real, shape_out) {
-	setup_expand(inst, LiteGraph.OUTPUT, real, "...", shape_out, function () {
-		switch (this.mode) {
-			case 0: {
-				// Prevent the case of connecting "..." to "..." to form "0:* 0:*" then connect "..." to "0:*"
-				// With the cost of minor inconvenience
-				// [TODO] Maybe properly detect if pin belongs to "..."?
-				if (arguments[3].inputs[arguments[4]].link)
-					return false;
-
-				if (this.self.outputs[arguments[0]].links && this.self.outputs[arguments[0]].links.length > 0)
-					return true;
-				
-				// Avoid node to connect to multiple output while allowing different pins
-				for (let i = 0; i < this.self.outputs.length; ++ i) {
-					if (this.self?.onConnectExpand?.("single_impl_output_check", this.self.outputs[i].name, ...arguments, i))
-						continue;
-					let output_node = this.self.getOutputNodes(i);
-					if (output_node)
-						for (let j = 0; j < output_node.length; ++ j) {
-							if (output_node[j] === arguments[3] && i === arguments[0])
-								return false;
-						}
-				}
-
-				if (arguments[2].__outputType) // Reroute
-					this.self.outputs[arguments[0]].type = arguments[2].__outputType;
-				// else if (arguments[2].defaultConnectionsLayout) // Reroute (rgthree)
-				// 	this.self.outputs[arguments[0]].type = arguments[2].type;
-				else
-					this.self.outputs[arguments[0]].type = arguments[2].type;
-			} break;
-			case 1: {
-				this.self.outputs[arguments[2]].name = this.self?.onNameExpand?.(false, LiteGraph.OUTPUT, ...arguments) ?? `${arguments[1]}:${arguments[0]}`;
-			} break;
-			case 2: {
-				if (arguments[0] === LiteGraph.OUTPUT) {
-					let link_info = arguments[3];
-					if (this.self?.onConnectExpand?.("single_impl_output_remove", this.self.outputs[link_info.origin_slot]?.name, ...arguments))
-						return true;
-					if (!this.self.outputs[link_info.origin_slot].links || this.self.outputs[link_info.origin_slot].links.length === 0) {
-						link_shift_up(this.self, this.self.outputs, link_info.origin_slot, true, arguments);
-						-- real.output;
-					}
-				}
-			} break;
-		}
-	});
-}
-
-export function junction_impl(nodeType, nodeData, app, name, shape_in, shape_out) {
-	lib0246.hijack(nodeType.prototype, "onConnectExpand", expand_blacklist_func);
-	nodeType.prototype.onNodeCreated = function () {
-		if (typeof name === "string")
-			init_update(this, name);
-		
-		if (this.widgets) {
-			const offset = this.widgets.find(w => w.name === "_offset");
-			if (offset) {
-				offset.options = offset.options ?? {};
-				offset.options.multiline = true;
-			}
-		}
-
-		const real = {
-			input: 0,
-			output: 0,
-		};
-		
-		single_impl_input_raw(this, app, real, shape_in);
-
-		single_impl_output_raw(this, app, real, shape_out);
-
-	};
-	// rgthree_exec("addConnectionLayoutSupport", nodeType, app);
-}
-
-export function single_impl_input(nodeType, nodeData, app, shape_in) {
-	lib0246.hijack(nodeType.prototype, "onConnectExpand", expand_blacklist_func);
-	lib0246.hijack(nodeType.prototype, "onNodeCreated", function () {
-		if (this.mark) {
-			setup_loop_update(this.self);
-			
-			single_impl_input_raw(this.self, app, {
-				input: 0,
-			}, shape_in);
-		}
-	});
-}
-
-export function single_impl_output(nodeType, nodeData, app, shape_out) {
-	lib0246.hijack(nodeType.prototype, "onConnectExpand", expand_blacklist_func);
-	lib0246.hijack(nodeType.prototype, "onNodeCreated", function () {
-		if (this.mark) {
-			setup_loop_update(this.self);
-
-			single_impl_output_raw(this.self, app, {
-				output: 0,
-			}, shape_out);
-		}
-	});
-}
-
-export function single_impl_pin(nodeType, pin_list) {
-	lib0246.hijack(nodeType.prototype, "onNodeCreated", function () {
-		if (this.mark)
-			for (let i = 0; i < pin_list.length; i += 3)
-				setup_sole_pin(
-					this.self,
-					pin_list[i],
-					pin_list[i + 1] === LiteGraph.INPUT ? "input" : "output",
-					pin_list[i + 1],
-					pin_list[i + 2]
-				);
-	});
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1007,64 +660,6 @@ function raw_setup_log(self) {
 		return "";
 	};
 }
-
-function force_size(node, widget, mode) {
-	let temp_size = node.computeSize();
-	if (!node.size)
-		node.size = temp_size;
-	temp_size[0] = node.size[0];
-	if (widget)
-		temp_size[1] += widget.computedHeight - 32;
-	if (mode)
-		node.setSize(temp_size);
-	else
-		node.size = temp_size;
-}
-
-function setup_log_raw(node, history = false) {
-	raw_setup_log(node);
-	if (history) {
-		node.log_history = new lib0246.RingBuffer(30);
-		node.log_count = 0;
-	}
-	node.msgSize = function (event) {
-		force_size(node, node.log_widget, false);
-	};
-	window.setTimeout(() => {
-		// https://github.com/failfa-st/failfast-comfyui-extensions/issues/16
-		api.addEventListener("ue-message-handler", node.msgSize);
-		lib0246.hijack(node, "onRemoved", function () {
-			if (this.mark)
-				api.removeEventListener("ue-message-handler", node.msgSize);
-		});
-	}, 0);
-}
-
-export function setup_log(node, history = false, force = false) {
-	if (force)
-		raw_setup_log(node);
-	else
-		lib0246.hijack(node, "onNodeCreated", function () {
-			if (this.mark)
-				setup_log_raw(this.self, history);
-		});
-	lib0246.hijack(node, "onExecuted", function (message) {
-		if (this.mark) {
-			if (this.self.log_history) {
-				this.self.log_history.push({
-					track: this.self.log_count ++,
-					msg: message.text
-				});
-				
-				this.self.log_widget.value = "";
-				for (let item of this.self.log_history)
-					this.self.log_widget.value += `${item.track}: ` + item.msg + "\n\n";
-			} else
-				this.self.log_widget.value = message.text;
-		}
-	});
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1080,14 +675,6 @@ export function process_reroute(node, type) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function node_mouse_pos(node) {
-	return [
-		app.canvas.graph_mouse[0] - node.pos[0],
-		app.canvas.graph_mouse[1] - node.pos[1],
-	];
-}
-
 function calc_flex(node, width) {
 	node.flex_data = node.flex_data ?? {};
 	node.flex_data.share_count = 0;
@@ -2824,152 +2411,9 @@ export function RATIO_WIDGET(data_type, data_name, options = {}) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export function SPACE_TITLE_WIDGET() {
-	return {
-		value: -1,
-		type: "space_title",
-		options: {
-			serialize: false,
-		},
-		select: true,
-		select_color: lib0246.rgb_to_hex(
-			lib0246.rand_int(128, 255),
-			lib0246.rand_int(128, 255),
-			lib0246.rand_int(128, 255)
-		),
-		draw: function(ctx, node, widget_width, y, widget_height) {
-			ctx.save();
-			
-			if (this.value > -1) {
-				let widget_text = app.graph.getNodeById(this.value)?.title;
-
-				if (widget_text)
-					widget_text += ` (${this.value})`;
-				else
-					widget_text = this.value;
-			
-				const side_margin = widget_text.length + 5,
-					text_measure = ctx.measureText(widget_text),
-					text_center_y = (text_measure.actualBoundingBoxAscent + text_measure.actualBoundingBoxDescent) / 2,
-					off_y = y + widget_height / 2;
-
-				ctx.beginPath();
-				ctx.fillStyle = this.select ? this.select_color : "#aaaaaa";
-				ctx.font = "15px Consolas";
-				ctx.textAlign = "center";
-				ctx.fillText(widget_text, widget_width / 2, text_center_y + off_y);
-				ctx.closePath();
-
-				ctx.beginPath();
-				ctx.strokeStyle = "#aaaaaa";
-				ctx.lineWidth = 2;
-				ctx.setLineDash([5, 5]);
-				ctx.moveTo(0, off_y);
-				ctx.lineTo(widget_width / 2 - text_measure.width / 2 - side_margin, off_y);
-				ctx.stroke();
-				ctx.closePath();
-
-				ctx.beginPath();
-				ctx.strokeStyle = "#aaaaaa";
-				ctx.lineWidth = 2;
-				ctx.setLineDash([5, 5]);
-				ctx.moveTo(widget_width / 2 + text_measure.width / 2 + side_margin, off_y);
-				ctx.lineTo(widget_width, off_y);
-				ctx.stroke();
-				ctx.closePath();
-			} else {
-				ctx.beginPath();
-				ctx.strokeStyle = "#aaaaaa";
-				ctx.lineWidth = 2;
-				ctx.setLineDash([5, 5]);
-				ctx.moveTo(0, y + widget_height / 2);
-				ctx.lineTo(widget_width, y + widget_height / 2);
-				ctx.stroke();
-				ctx.closePath();
-			}
-
-			ctx.restore();
-		},
-		mouse: function(event, pos, node) {
-			if (event.type === "pointerdown")
-				this.select = !this.select;
-		},
-		computeSize: function() {
-			return [0, 20];
-		}
-	};
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const HUB_WIDGET_PIN = Symbol("widget_pin");
-
-export function hub_combo_pin_type_func(value, canvas, node, pos, event) {
-	if (this[HUB_WIDGET_PIN].type !== "COMBO")
-		this[HUB_WIDGET_PIN].type = value;
-	for (let i = 0; this[HUB_WIDGET_PIN].links && i < this[HUB_WIDGET_PIN].links.length; ++ i) {
-		const link = app.graph.links[this[HUB_WIDGET_PIN].links[i]],
-			target_node = app.graph.getNodeById(link.target_id),
-			pin = target_node.inputs[link.target_slot];
-		if (!(pin.type === value || pin.type === "*"))
-			target_node.disconnectInput(link.target_slot);
-	}
-}
-
-export const HUB_SOLE = 7;
-
-async function hub_serialize_batch_combo(node, index_str) {
-	return node.widgets[Number(index_str)].value.join(":");
-}
-
-export const PIPE_COMBO = ["HIGHWAY_PIPE", "JUNCTION_PIPE"];
-
-export function hub_setup_widget(node, data, id) {
-	for (let node_id of app.graph.extra["0246.HUB_DATA"][id].node_list)
-		node.hubPushNode(app.graph.getNodeById(node_id), true);
-
-	if (node.outputs && node.outputs.length > 0) {
-		let count = 0, widget;
-		for (let name in node.hub.data.sole_type) {
-			const proc_name = node.hub.data.sole_type[name], // name.split(":"),
-				type_data = proc_name.slice(3, 6);
-			switch (proc_name[2]) {
-				case "int": {
-					widget = node.hubPushWidgetPrim("INT", type_data, name);
-				} break;
-				case "float": {
-					widget = node.hubPushWidgetPrim("FLOAT", type_data, name);
-				} break;
-				case "string": {
-					widget = node.hubPushWidgetPrim("STRING", type_data, name);
-				} break;
-				case "boolean": {
-					widget = node.hubPushWidgetPrim("BOOLEAN", type_data, name);
-				} break;
-				case "combo": {
-					switch (proc_name[3]) {
-						case "__BATCH_PRIM__": {
-							widget = node.hubPushWidgetComboRaw(type_defs, proc_name[3], hub_combo_pin_type_func, type_data, name);
-						} break;
-						case "__BATCH_COMBO__": {
-							widget = node.hubPushWidgetComboRaw(combo_defs, proc_name[3], hub_combo_pin_type_func, type_data, name, hub_serialize_batch_combo);
-						} break;
-						case "__PIPE__": {
-							widget = node.hubPushWidgetComboRaw(PIPE_COMBO, proc_name[3], hub_combo_pin_type_func, type_data, name);
-						} break;
-						default: {
-							widget = node.hubPushWidgetCombo(...type_data, name);
-						} break;
-					}
-				} break;
-			}
-			widget.value = data.widgets_values[HUB_SOLE + 2 + (count ++)];
-		}
-	}
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -3869,12 +3313,6 @@ function cloud_draw_msg(ctx, widget, inst_id, text, prev_p) {
 	// );
 	// return curr_p;
 }
-
-export function cloud_expand_func(mode, name) {
-	if (this.mark && this.res !== true)
-		this.res = name.startsWith("cloud:") || name === "_cloud_in";
-}
-
 export function CLOUD_WIDGET(data_type, data_name, options = {}) {
 	const widget = {
 		type: data_type,
@@ -4148,153 +3586,6 @@ export function CLOUD_WIDGET(data_type, data_name, options = {}) {
 
 	return widget;
 }
-
-export function cloud_menu(name, options) {
-	options.push(
-		{
-			content: `[0246.Cloud "${name}"] 🗑️ Picked Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				const cloud_widget = node.widgets.find(w => w.name === `cloud:${name}`);
-				for (let inst_id of cloud_widget.cloud.select)
-					if (cloud_widget.cloud.data.inst.find(_ => _.id === inst_id).kind !== "pin")
-						cloud_widget.remove(node, inst_id);
-				cloud_widget.cloud.select.clear();
-				// node.setSize([node.size[0], Math.max(node.computeSize()[1], node.size[1])]);
-				app.canvas.setDirty(true);
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] ✔️ All Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				const cloud_widget = node.widgets.find(w => w.name === `cloud:${name}`);
-				for (let i = 0; i < cloud_widget.cloud.data.inst.length; ++ i)
-					if (!cloud_widget.cloud.select.has(cloud_widget.cloud.data.inst[i].id)) {
-						cloud_widget.cloud.select.add(cloud_widget.cloud.data.inst[i].id);
-						cloud_widget.select(node, cloud_widget.cloud.data.inst[i].id, true);
-					}
-				// node.setSize([node.size[0], Math.max(node.computeSize()[1], node.size[1])]);
-				app.canvas.setDirty(true);
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] 🗑️ Unpick All Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				const cloud_widget = node.widgets.find(w => w.name === `cloud:${name}`);
-				for (let i = 0; i < cloud_widget.cloud.data.inst.length; ++ i)
-					if (cloud_widget.cloud.select.has(cloud_widget.cloud.data.inst[i].id)) {
-						cloud_widget.select(node, cloud_widget.cloud.data.inst[i].id, false);
-						cloud_widget.cloud.select.delete(cloud_widget.cloud.data.inst[i].id);
-					}
-				// node.setSize([node.size[0], Math.max(node.computeSize()[1], node.size[1])]);
-				app.canvas.setDirty(true);
-			}
-		},
-		null, {
-			content: `[0246.Cloud "${name}"] ✔️ first_group_id ➡️ Picked Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				node.widgets.find(w => w.name === `cloud:${name}`).build_group(
-					node,
-					node.widgets.find(w => w.name === `cloud:${name}:first_group_id`).value,
-					null
-				);
-				app.canvas.setDirty(true);
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] 🗑️ second_group_id ➡️ Picked Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				node.widgets.find(w => w.name === `cloud:${name}`).remove_group(
-					node,
-					node.widgets.find(w => w.name === `cloud:${name}:second_group_id`).value,
-					null
-				);
-				app.canvas.setDirty(true);
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] ✔️ first_group_id ➡️ second_group_id`,
-			callback: (value, options, evt, menu, node) => {
-				node.widgets.find(w => w.name === `cloud:${name}`).build_group(
-					node,
-					node.widgets.find(w => w.name === `cloud:${name}:first_group_id`).value,
-					node.widgets.find(w => w.name === `cloud:${name}:second_group_id`).value
-				);
-				app.canvas.setDirty(true);
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] 🗑️ first_group_id ➡️ second_group_id`,
-			callback: (value, options, evt, menu, node) => {
-				node.widgets.find(w => w.name === `cloud:${name}`).remove_group(
-					node,
-					node.widgets.find(w => w.name === `cloud:${name}:second_group_id`).value,
-					node.widgets.find(w => w.name === `cloud:${name}:first_group_id`).value
-				);
-				app.canvas.setDirty(true);
-			}
-		},
-		null, {
-			content: `[0246.Cloud "${name}"] ✔️ Cloud ➡️ 🗑️ Preview`,
-			callback: (value, options, evt, menu, node) => {
-				
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] ✔️ Preview ➡️ 🗑️ All Clouds`,
-			callback: (value, options, evt, menu, node) => {
-				// This should allow to specify how to split the preview from a popup using regex
-				// By default it will not splite and convert entire thing directly to string
-				(async function () {
-					const regex = prompt("Please specify delimiter regex", ",\\s"),
-						cloud_widget = node.widgets.find(w => w.name === `cloud:${name}`);
-
-					let parse_data = await (await fetch(
-						window.location.origin + "/0246-parse-prompt",
-						{
-							method: "POST",
-							headers: {
-								"Content-Type": "application/json",
-							},
-							body: JSON.stringify({
-								"regex": regex,
-								"prompt": node.widgets.find(w => w.name === `cloud:${name}:preview`).value,
-							}),
-						}
-					)).json();
-
-					cloud_widget.value = {}; // [TODO] There's "pin" cloud, do do not remove those
-					let prev_text_cloud = null, prev_weight_cloud = null;
-
-					for (let i = 0; i < parse_data.res.length; ++ i) {
-						const text_cloud = cloud_widget.build(node, "text"),
-							weight_cloud = cloud_widget.build(node, "weight");
-						cloud_widget.cloud.widgets[text_cloud.id][0].options.setValue(parse_data.res[i][0]);
-						cloud_widget.cloud.widgets[weight_cloud.id][0].value = parse_data.res[i][1];
-						text_cloud.widgets_values[0] = [parse_data.res[i][0]];
-						weight_cloud.widgets_values[0] = [parse_data.res[i][1]];
-						if (prev_text_cloud)
-							cloud_widget.select(node, prev_text_cloud.id, false);
-						if (prev_weight_cloud)
-							cloud_widget.select(node, prev_weight_cloud.id, false);
-						cloud_widget.cloud.select.clear();
-						cloud_widget.select(node, text_cloud.id, true);
-						cloud_widget.cloud.select.add(text_cloud.id);
-						cloud_widget.select(node, weight_cloud.id, true);
-						cloud_widget.cloud.select.add(weight_cloud.id);
-						cloud_widget.build_group(node, "_", null);
-						prev_text_cloud = text_cloud;
-						prev_weight_cloud = weight_cloud;
-					}
-					cloud_widget.select(node, prev_text_cloud.id, false);
-					cloud_widget.select(node, prev_weight_cloud.id, false);
-					cloud_widget.cloud.select.clear();
-					app.canvas.setDirty(true);
-				})();
-			}
-		}, {
-			content: `[0246.Cloud "${name}"] ✔️ Preview ➡️ Cloud`,
-			callback: (value, options, evt, menu, node) => {
-				
-			}
-		},
-		null
-	);
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4345,23 +3636,6 @@ function hijack_widget_name(node, widget) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export function switch_widget(node, index, value) {
-	node.addWidget("combo", `switch:${index}`, value, function (value, canvas, node, pos, evt) {
-		const index = node.widgets.findIndex(_ => _ === this);
-		node.outputs[index].name = `${node.inputs.find(_ => _.name === value)?.type ?? "_"}:${index}`;
-	}, {
-		serialize: true,
-		values: function (widget) {
-			let res = ["_"];
-			for (let i = 0; i < node.inputs.length; ++ i)
-				if (node.inputs[i].link)
-					res.push(node.inputs[i]?.label ?? node.inputs[i].name);
-			return res;
-		}
-	});
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4637,12 +3911,3 @@ app.registerExtension({
 		}
 	},
 });
-
-// [TODO] Copy-paste specific cloud through implement right-click menu
-// [TODO] CLoud scrolling
-
-// LiteGraph.LGraphCanvas.link_type_colors
-
-// window.test = [
-// 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-// ];

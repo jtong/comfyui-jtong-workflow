@@ -7,35 +7,6 @@ export async function try_import(name) {
 		return null;
 	}
 }
-/*
-export async function load_script(url) {
-	return new Promise((resolve, reject) => {
-		const script = document.createElement('script');
-		script.type = 'text/javascript';
-		script.src = url;
-
-		script.onload = () => {
-			resolve();
-		};
-
-		script.onerror = () => {
-			reject(new Error(`Script load error for ${url}`));
-		};
-
-		document.head.appendChild(script);
-	});
-}
-*/
-export function compare_version(a, b) {
-	for (let i = 0; i < a.length; ++ i) {
-		if (a[i] > b[i])
-			return 1;
-		if (a[i] < b[i])
-			return -1;
-	}
-	return 0;
-}
-
 export function error_popup(msg) {
 	let dialog = new ComfyDialog();
 	dialog.show(`<p>${msg}</p>`);
@@ -164,25 +135,6 @@ export function reverse_array(arr, start, end) {
 		end--;
 	}
 }
-
-export function rotate_array(arr, n) {
-	const length = arr.length;
-	// Normalize the rotation count
-	n = n % length;
-	if (n < 0)
-		// Convert negative rotation to positive equivalent
-		n += length;
-
-	// Reverse the whole array
-	reverse_array(arr, 0, length - 1);
-	// Reverse the first part
-	reverse_array(arr, 0, n - 1);
-	// Reverse the second part
-	reverse_array(arr, n, length - 1);
-
-	return arr;
-}
-
 export function equal_array(a, b, m = false, w = null) {
 	if (a.length !== b.length)
 		return false;
@@ -213,18 +165,6 @@ export function equal_dict(a, b, m = false, w = null) {
 	}
 	return true;
 }
-
-export function find_key_dict(dict, key) {
-	const key_list = Object.keys(dict);
-	let res = [];
-	for (let i = 0; i < key_list.length; ++ i)
-		if (typeof key === "string" && key_list[i].indexOf(key) != -1)
-			res.push(key_list[i]);
-		else if (typeof key === "function" && key(key_list[i]))
-			res.push(key_list[i]);
-	return res;
-}
-
 export function update_dict(a, b) {
 	for (let key in a)
 		if (b.hasOwnProperty(key))
@@ -336,91 +276,9 @@ export function indent_str(strings, ...values) {
 	// Combine the trimmed lines
 	return lines.join('\n');
 }
-
-export function hex_to_rgb(hex) {
-	if (hex.startsWith("#"))
-		hex = hex.slice(1);
-	if (hex.length === 3)
-		hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-	let bigint = parseInt(hex, 16);
-	return [
-		(bigint >> 16) & 255,
-		(bigint >> 8) & 255,
-		bigint & 255
-	];
-}
-
 export function rgb_to_hex(r, g, b) {
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
-
-export function rgb_to_hsl(r, g, b) {
-	r /= 255, g /= 255, b /= 255;
-	let max = Math.max(r, g, b), min = Math.min(r, g, b),
-		h, s, l = (max + min) / 2;
-
-	if (max === min)
-		h = s = 0; // achromatic
-	else {
-		let d = max - min;
-		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-		switch (max) {
-			case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-			case g: h = (b - r) / d + 2; break;
-			case b: h = (r - g) / d + 4; break;
-		}
-		h /= 6;
-	}
-
-	return [h, s, l];
-}
-
-export function hue_to_rgb(p, q, t) {
-	if (t < 0) t += 1;
-	if (t > 1) t -= 1;
-	if (t < 1/6) return p + (q - p) * 6 * t;
-	if (t < 1/2) return q;
-	if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-	return p;
-}
-
-export function hsl_to_rgb(h, s, l) {
-	let r, g, b;
-
-	if (s === 0)
-		r = g = b = l; // achromatic
-	else {
-		let q = l < 0.5 ? l * (1 + s) : l + s - l * s,
-			p = 2 * l - q;
-		r = hue_to_rgb(p, q, h + 1/3);
-		g = hue_to_rgb(p, q, h);
-		b = hue_to_rgb(p, q, h - 1/3);
-	}
-
-	return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
-
-export function mix_color_hue(color1, color2) {
-	let hsl1 = rgb_to_hsl(...hex_to_rgb(color1)),
-		hsl2 = rgb_to_hsl(...hex_to_rgb(color2));
-
-	return rgb_to_hex(...hsl_to_rgb(
-		(hsl1[0] + hsl2[0]) / 2,
-		(hsl1[1] + hsl2[1]) / 2, 
-		(hsl1[2] + hsl2[2]) / 2
-	));
-}
-
-export function mix_color(color1, color2) {
-	let rgb1 = hex_to_rgb(color1), rgb2 = hex_to_rgb(color2);
-
-	return rgb_to_hex(
-		Math.round(Math.sqrt(rgb1[0] * rgb1[0] + rgb2[0] * rgb2[0])),
-		Math.round(Math.sqrt(rgb1[1] * rgb1[1] + rgb2[1] * rgb2[1])),
-		Math.round(Math.sqrt(rgb1[2] * rgb1[2] + rgb2[2] * rgb2[2]))
-	);
-}
-
 export function norm(val, min, max) {
 	return (val - min) / (max - min);
 }
@@ -428,11 +286,6 @@ export function norm(val, min, max) {
 export function lerp(norm, min, max) {
 	return (max - min) * norm + min;
 }
-
-export function map(val, src_min, src_max, dst_min, dst_max) {
-	return lerp(norm(val, src_min, src_max), dst_min, dst_max);
-}
-
 export function is_inside_rect(
 	this_x, this_y,
 	other_x, other_y, other_w, other_h
