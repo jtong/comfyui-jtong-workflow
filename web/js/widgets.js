@@ -33,165 +33,6 @@ export const HELP = {
 			</li>
 		</ul>
 	`.replace(/[\t\n]+/g, ''),
-	"junction": `
-		<span>
-			_offset is used to skip data ahead for specific type (since internally it's a sequence of data).
-		</span>
-		<br><br>
-		<span>
-			_offset is persistent and will retains information across linked Junction and JunctionBatch.
-		</span>
-		<br><br>
-		<span>
-			The _offset syntax goes as follow:
-		</span>
-		<ul>
-			<li>
-				<code>type,1</code>
-				<br>
-				- type is the type (usually LATENT, MODEL, VAE, etc.) and 1 is the index being set.
-			</li>
-			<li>
-				<code>type,+2</code>
-				<br>
-				- Same as above but instead of set offset, it increase the offset instead.
-			</li>
-			<li>
-				<code>type,-2</code>
-				<br>
-				- Decrease offset.
-			</li>
-			<li>
-				<code>type1, -1; type2, +2; type3, 4</code>
-				<br>
-				- Multiple offset.
-			</li>
-		</ul>
-	`.replace(/[\t\n]+/g, ''),
-	"box_range": `
-		<span>
-			Drag from an empty space to anywhere to create a new box.
-		</span>
-		<br><br>
-		<span>
-			Click on a box to select that box.
-		</span>
-		<ul>
-			<li>
-				Clicking the same position again will cycle through each boxes that are contains that mouse position.
-			</li>
-		</ul>
-		<span>
-			Changing z-index of a box may also change z-index of other boxes.
-		</span>
-		<br><br>
-		<span>
-			If during MOVE or RESIZE state, mouse the mouse out of boundary to cancel the action.
-		</span>
-		<br><br>
-		<span>
-			If holding Shift during drag from empty space, then it will DELETE any box that are within that area.
-		</span>
-		<br><br>
-		<span>
-			When a box is selected:
-		</span>
-		<ul>
-			<li>
-				Drag the box around to MOVE it.
-			</li>
-			<li>
-				Double click in top right to DELETE.
-			</li>
-			<li>
-				Double click in bottom right to RESIZE.
-			</li>
-			<li>
-				Double click in bottom left to INCREASE Z-INDEX.
-			</li>
-			<li>
-				Double click in top left to DECREASE Z-INDEX.
-			</li>
-			<li>
-				Hold SHIFT while clicking on the box again will prompt for specific range <code>[x, y, width, height]</code> or JS code string.
-				<ul>
-					<li>
-						If any is <code>null</code> then it will be filled with the current boundary data for that index.
-					</li>
-					<li>
-						If any is <code>"string"</code> then it will be implicitly assumed to be math expression and will be evaluated.
-					</li>
-					<li>
-						If entire thing is JS then it must return an array. There's some utilities function available.
-						<ul>
-							<li>
-								You can Ctrl-F to search for "safe_eval" within "nodes.js" and "utils.js" for more info on what's available.
-							</li>
-						</ul>
-					</li>
-				</ul>
-			</li>
-		</ul>
-		<span>
-			There'res a "secret" mode such that when all 3 are unlocked or locked and change the "ratio", it will actually 
-			changes the "area" of the box instead. All 3 locked means "width" are pinned, all 3 unlocked means "height" are pinned.
-		</span>
-	`.replace(/[\t\n]+/g, ''),
-	"hub": `
-		<span>
-			This node can create a NEW widget (or create a bunch of NEW widgets using an exist node as template)
-		</span>
-		<br><br>
-		<span>
-			It also can group and sync widgets data from other nodes.
-		</span>
-		<br><br>
-		<span>
-			When clicking on node title within the hub, it will select/unselect that node.
-		</span>
-		<ul>
-			<li>
-				A node is being selected when a border color is shown around the node.
-			</li>
-		</ul>
-		<span>
-			You don't have to worry about when converting tracked nodes to group since it can be detected and can auto-add the group node.
-		</span>
-		<ul>
-			<li>
-				However when manually add group node to Hub, Hub will not automatically add widgets from the expanded nodes (probably will allow this in future).
-			</li>
-		</ul>
-		<span>
-			Only built-in widgets (and Box Range) are supported. Other custom widget are probably not going to works.
-		</span>
-		<ul>
-			<li>
-				Of course you can try to group custom widgets as I tried to design Hub to be as "reactive" as possible internally.
-			</li>
-		</ul>
-		<span>
-			Unfortunately due to inherent limitation you cannot resize Hub node.
-		</span>
-		<br><br>
-		<span>
-			Also for DOM/HTML-based widgets (such as multiline text), the element will probably "flick" between the Hub and the actual node.
-		</span>
-		<br><br>
-		<span>
-			Warning:
-		</span>
-		<ul>
-			<li>
-				For any native image upload widgets, the tracked nodes will have preview image may render out of node bound. This is due to inherent limitation and I cannot fix it.
-			</li>
-			<li>
-				Do not convert widget to input from within Hub node. Do it from the tracked node instead. I may handle this case later in future.
-			</li>
-			<li>
-				Image preview also not rendered properly. Therefore it will need a custom widget that I will probably implement.
-		</ul>
-	`.replace(/[\t\n]+/g, ''),
 };
 
 import { app, ANIM_PREVIEW_WIDGET } from "../../../scripts/app.js";
@@ -204,11 +45,6 @@ import * as lib0246 from "./utils.js";
 export let defs, node_defs = [], combo_defs = [], type_defs = new Set();
 
 let rgthree_utils;
-
-export function rgthree_exec(name, ...args) {
-	return rgthree_utils?.[name]?.apply(null, args);
-}
-
 export function help_option(node, content, app) {
 	// Guess this is good enough
 	// rgthree_exec("addHelpMenuItem", node, content, app);
@@ -842,7 +678,6 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 			);
 
 			// HTML format of help
-			help_option(nodeType, HELP["highway"], options);
 			options.push(null);
 		}
 	});
@@ -1104,10 +939,6 @@ export function junction_impl(nodeType, nodeData, app, name, shape_in, shape_out
 
 		single_impl_output_raw(this, app, real, shape_out);
 
-		lib0246.hijack(this, "getExtraMenuOptions", function (canvas, options) {
-			if (!this.mark)
-				help_option(nodeType, HELP["junction"], options);
-		});
 	};
 	// rgthree_exec("addConnectionLayoutSupport", nodeType, app);
 }

@@ -192,10 +192,6 @@ app.registerExtension({
 							const ratio_widget = node.widgets.find(w => w.name === "box_range_ratio"),
 								box_widget = node.widgets.find(w => w.name === "box_range");
 
-							lib0246.hijack(node, "getExtraMenuOptions", function (canvas, options) {
-								if (!this.mark)
-									wg0246.help_option(nodeType, wg0246.HELP["box_range"], options);
-							});
 
 							ratio_widget.callback = function (value, widget, node, pos, event) {
 								if (widget.name === "box_range_ratio") {
@@ -562,7 +558,6 @@ app.registerExtension({
 								}
 							);
 
-							wg0246.help_option(Hub, wg0246.HELP["hub"], options);
 
 							options.push(null);
 						}
