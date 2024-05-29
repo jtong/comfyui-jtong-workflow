@@ -1,47 +1,9 @@
-export const HELP = {
-	"highway": `
-		<span>
-			The _query syntax goes as follow:
-		</span>
-		<ul>
-			<li>
-				<code>&gt;name</code>
-				<br>
-				- Input variable.
-			</li>
-			<li>
-				<code>&lt;name</code>
-				<br>
-				- Output variable.
-			</li>
-			<li>
-				<code>&gt;\`n!ce n@me\`</code>
-				<br>
-				-	Input variable but with special character and spaces (except \`, obviously).
-			</li>
-			<li>
-				<code>!name</code>
-				<br>
-				- Output variable, but also delete itself, preventing from being referenced further.
-				<br>
-				- CURRENTLY BROKEN DUE TO HOW COMFYUI UPDATE THE NODES.
-			</li>
-			<li>
-				<code>&lt;name1; &gt;name2; !name3</code>
-				<br>
-				- Multiple input and outputs together.
-			</li>
-		</ul>
-	`.replace(/[\t\n]+/g, ''),
-};
 
-import { app, ANIM_PREVIEW_WIDGET } from "../../../scripts/app.js";
+import { app } from "../../../scripts/app.js";
 
 import * as lib0246 from "./utils.js";
 
 export let defs, node_defs = [], combo_defs = [], type_defs = new Set();
-
-let rgthree_utils;
 lib0246.hijack(app, "registerNodesFromDefs", async function (_defs) {
 	if (!this.mark && !Array.isArray(type_defs)) {
 		defs = _defs;
@@ -166,6 +128,7 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 			}
 		});
 
+		//这个应该是克隆的时候别漏了已经创建出来的input和output
 		lib0246.hijack(this, "clone", function () {
 			if (this.mark) {
 				const node = this.res;
@@ -184,6 +147,7 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 			}
 		});
 
+		//这就是那个按钮
 		this.addWidget("button", "Update", null, () => {
 			const self = this;
 
@@ -354,96 +318,6 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 		});
 	};
 
-	lib0246.hijack(nodeType.prototype, "getExtraMenuOptions", function (canvas, options) {
-		// canvas === app.canvas
-		
-		// value: parent submenu obj
-		// options: this.extra == node, scroll_speed, event: litegraph event
-		// evt: native event object
-		// menu
-		// node
-		if (!this.mark) {
-			options.push(
-				{
-					content: "[0246.Highway] Selected node pins -> highway pins",
-					callback: (value, options, evt, menu, node) => {
-						for (let node_id in app.canvas.selected_nodes) {
-							if (node.id === Number(node_id))
-								continue;
-							save_parse_load_pin(node, shape_in, shape_out, (node, prev, mode) => {
-								const from = app.graph.getNodeById(Number(node_id));
-								if (mode) {
-									copy_output_pin(node, from, "output", "<");
-								} else {
-									if (defs[from.comfyClass]?.input?.required)
-										copy_input_pin(node, from, "input", "input", "required", ">");
-									if (defs[from.comfyClass]?.input?.optional)
-										copy_input_pin(node, from, "input", "input", "optional", ">");
-								}
-							});
-						}
-					}
-				},
-				{
-					content: "[0246.Highway] Selected node pins -> highway pins (inverse)",
-					callback: (value, options, evt, menu, node) => {
-						for (let node_id in app.canvas.selected_nodes) {
-							if (node.id === Number(node_id))
-								continue;
-							save_parse_load_pin(node, shape_in, shape_out, (node, prev, mode) => {
-								const from = app.graph.getNodeById(Number(node_id));
-								if (!mode) {
-									copy_output_pin(node, from, "input", ">");
-								} else {
-									if (defs[from.comfyClass]?.input?.required)
-										copy_input_pin(node, from, "input", "output", "required", "<");
-									if (defs[from.comfyClass]?.input?.optional)
-										copy_input_pin(node, from, "input", "output", "optional", "<");
-								}
-							});
-						}
-					}
-				},
-				{
-					content: "[0246.Highway] Selected node pins -> highway _query",
-					callback: (value, options, evt, menu, node) => {
-						for (let node_id in app.canvas.selected_nodes) {
-							if (node.id === Number(node_id))
-								continue;
-							const query = node.widgets.find(w => w.name === "_query"),
-								from = app.graph.getNodeById(Number(node_id));
-							query.value = "";
-							if (defs[from.comfyClass]?.input?.required)
-								querify_input_pin(query, from, "required", ">");
-							if (defs[from.comfyClass]?.input?.optional)
-								querify_input_pin(query, from, "optional", ">");
-							querify_output_pin(query, from, "<");
-						}
-					}
-				},
-				{
-					content: "[0246.Highway] Selected node pins -> highway _query (inverse)",
-					callback: (value, options, evt, menu, node) => {
-						for (let node_id in app.canvas.selected_nodes) {
-							if (node.id === Number(node_id))
-								continue;
-							const query = node.widgets.find(w => w.name === "_query"),
-								from = app.graph.getNodeById(Number(node_id));
-							query.value = "";
-							if (defs[from.comfyClass]?.input?.required)
-								querify_input_pin(query, from, "required", "<");
-							if (defs[from.comfyClass]?.input?.optional)
-								querify_input_pin(query, from, "optional", "<");
-							querify_output_pin(query, from, ">");
-						}
-					}
-				},
-			);
-
-			// HTML format of help
-			options.push(null);
-		}
-	});
 
 	// rgthree_exec("addConnectionLayoutSupport", nodeType, app);
 }
@@ -567,52 +441,3 @@ function save_parse_load_pin(node, shape_in, shape_out, callback) {
 	}
 }
 
-function copy_input_pin(node, from, kind, to_kind, path, ops) {
-	const kind_upper = to_kind.charAt(0).toUpperCase() + to_kind.slice(1);
-	for (let name in defs[from.comfyClass][kind][path])
-		node["add" + kind_upper](
-			`${ops}${name}`,
-			Array.isArray(defs[from.comfyClass][kind][path][name][0]) ?
-				"STRING" : // COMBO is STRING internally anyways
-				defs[from.comfyClass][kind][path][name][0]
-		);
-}
-
-function querify_input_pin(widget, from, path, ops) {
-	for (let name in defs[from.comfyClass].input[path])
-		widget.value += `${ops}${name};`;
-}
-
-function copy_output_pin(node, from, kind, ops) {
-	const kind_upper = kind.charAt(0).toUpperCase() + kind.slice(1);
-	for (let i = 0; i < defs[from.comfyClass].output_name.length; ++ i)
-		node["add" + kind_upper](
-			`${ops}${defs[from.comfyClass].output_name[i]}`,
-			Array.isArray(defs[from.comfyClass].output[i]) ?
-				"STRING" :
-				defs[from.comfyClass].output[i]
-		);
-}
-
-function querify_output_pin(widget, from, ops) {
-	for (let i = 0; i < defs[from.comfyClass].output_name.length; ++ i)
-		widget.value += `${ops}${defs[from.comfyClass].output_name[i]};`;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export function process_reroute(node, type) {
-	type = type ?? node.widgets[0].value;
-	node.size[0] = 100 + type.length * 8;
-	node.inputs[0].type = type;
-	node.outputs[0].type = type;
-	node.__outputType = type;
-}

@@ -94,14 +94,6 @@ export function hijack(obj, key, func, evt) {
 
 	return old_func;
 }
-
-export function clone_class(original) {
-	return class extends original {
-		constructor(...args) {
-			super(...args);
-		}
-	};
-}
 export function random_id() {
 	return Date.now().toString(36) + Math.random().toString(36).substring(2);
 }
