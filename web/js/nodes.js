@@ -873,7 +873,7 @@ app.registerExtension({
 						}
 					});
 
-					wg0246.rgthree_exec("addConnectionLayoutSupport", Hub, app);
+					// wg0246.rgthree_exec("addConnectionLayoutSupport", Hub, app);
 				} break;
 				case "0246.Script": {
 					wg0246.junction_impl(nodeType, nodeData, app, null, LiteGraph.GRID_SHAPE, LiteGraph.GRID_SHAPE);

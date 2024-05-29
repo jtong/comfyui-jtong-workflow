@@ -211,7 +211,7 @@ export function rgthree_exec(name, ...args) {
 
 export function help_option(node, content, app) {
 	// Guess this is good enough
-	rgthree_exec("addHelpMenuItem", node, content, app);
+	// rgthree_exec("addHelpMenuItem", node, content, app);
 }
 
 lib0246.hijack(app, "registerNodesFromDefs", async function (_defs) {
@@ -847,7 +847,7 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 		}
 	});
 
-	rgthree_exec("addConnectionLayoutSupport", nodeType, app);
+	// rgthree_exec("addConnectionLayoutSupport", nodeType, app);
 }
 
 function save_parse_load_pin(node, shape_in, shape_out, callback) {
@@ -1109,7 +1109,7 @@ export function junction_impl(nodeType, nodeData, app, name, shape_in, shape_out
 				help_option(nodeType, HELP["junction"], options);
 		});
 	};
-	rgthree_exec("addConnectionLayoutSupport", nodeType, app);
+	// rgthree_exec("addConnectionLayoutSupport", nodeType, app);
 }
 
 export function single_impl_input(nodeType, nodeData, app, shape_in) {
