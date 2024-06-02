@@ -1,6 +1,7 @@
 import { app } from "../../../scripts/app.js";
 
 import * as wg0246 from "./widgets.js";
+import * as highend from "./highend_widgets.js";
 
 app.registerExtension({
 	name: "0246.Node",
@@ -9,6 +10,9 @@ app.registerExtension({
 			switch (nodeData.name) {
 				case "jtong.Highway": {
 					wg0246.highway_impl(nodeType, nodeData, app, LiteGraph.CIRCLE_SHAPE, LiteGraph.CIRCLE_SHAPE);
+				} break;
+				case "jtong.Highend": {
+					highend.highway_impl(nodeType, nodeData, app, LiteGraph.CIRCLE_SHAPE, LiteGraph.CIRCLE_SHAPE);
 				} break;
 			}
 		}

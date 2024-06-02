@@ -109,7 +109,7 @@ export function highway_impl(nodeType, nodeData, app, shape_in, shape_out) {
 
 			(async function () {
 				let data = await (await fetch(
-					window.location.origin + "/0246-parse-highway",
+					window.location.origin + "/0246-parse-highend",
 					{
 						method: "POST",
 						headers: {

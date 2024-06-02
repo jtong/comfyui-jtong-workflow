@@ -2,102 +2,10 @@ import ast
 import subprocess
 import sys
 
-natsort = None
-try:
-	natsort = __import__("natsort")
-except:
-	subprocess.Popen([sys.executable, "-m", "pip", "install", "natsort"]).wait()
-	natsort = __import__("natsort")
-
-BLACKLIST = [
-	"_way_in",
-	"_way_out",
-	"_junc_in",
-	"_junc_out",
-	"..."
-]
-
-######################################################################################
-######################################## HACK ########################################
-######################################################################################
-
-class TautologyStr(str):
-	def __ne__(self, other):
-		return False
-
-class ByPassTypeTuple(tuple):
-	def __getitem__(self, index):
-		if index > 0:
-			index = 0
-		item = super().__getitem__(index)
-		if isinstance(item, str):
-			return TautologyStr(item)
-		return item
-
-
-
 ######################################################################################
 ######################################## UTIL ########################################
 ######################################################################################
 
-
-class RevisionDict(dict):
-	def __init__(self, *args, **kwargs):
-		self.update(*args, **kwargs)
-
-	def path_count(self, path):
-		count = 0
-		for key in self.keys():
-			if key[0:len(path)] == path:
-				count += 1
-		return count
-	
-	def path_exists(self, path):
-		for key in self.keys():
-			if key[0:len(path)] == path:
-				return True
-		return False
-	
-	def path_iter(self, path):
-		for key in self.keys():
-			if key[0:len(path)] == path:
-				yield key
-
-	def path_keys(self, path):
-		res = []
-		for key in self.path_iter(path):
-			res.append(key[len(path):])
-		return res
-	
-	def path_iter_arr(self, path):
-		count = 0
-		while (*path, count) in self:
-			yield (*path, count)
-			count += 1
-
-	def sort(self, path_order, path_data, mode):
-		order_keys = [key for key in self.keys() if key[:len(path_order)] == path_order]
-		data_keys = [key for key in self.keys() if key[:len(path_data)] == path_data]
-		order_values = [value.split(" ") for value in (self[key] for key in order_keys)]
-		order_sorted = natsort.natsorted(order_values, alg=mode)
-
-		def indices_func(i):
-			if i < len(order_values):
-				return order_values.index(order_sorted[i])
-			else:
-				return None
-				
-		def swap_func(curr, next):
-			self[data_keys[curr]], self[data_keys[next]] = self[data_keys[next]], self[data_keys[curr]]
-			self[order_keys[curr]], self[order_keys[next]] = self[order_keys[next]], self[order_keys[curr]]
-
-		swap_index(indices_func, swap_func)
-
-		return self
-
-class RevisionBatch(list):
-	def __init__(self, *args):
-		self.extend(args)
 
 def check_update(data):
 	if isinstance(data, list):
@@ -106,22 +14,6 @@ def check_update(data):
 		data = ast.literal_eval(data) # [TODO] Maybe properly handle this in the future
 	return data["update"]
 
-def swap_index(index_func, swap_func):
-	visited = {}
-	i = 0
-	while True:
-		mapped_index = index_func(i)
-		if mapped_index is None:
-			break
-		if i not in visited:
-			current = i
-			next_index = mapped_index
-			while not visited.get(next_index, False):
-				swap_func(current, next_index)
-				visited[current] = True
-				current = next_index
-				next_index = index_func(current)
-		i += 1
 
 
 ######################################################################################
