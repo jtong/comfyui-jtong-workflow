@@ -1,0 +1,27 @@
+{
+  "1": {
+    "inputs": {
+      "_query": {
+        "data": ">data;",
+        "update": "lwx58zq4ci9dtn0bckh"
+      },
+      "+data:STRING": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "jtong.Highend",
+    "_meta": {
+      "title": "Highend"
+    }
+  },
+  "2": {
+    "inputs": {
+      "prompt": "prompt"
+    },
+    "class_type": "CR Prompt Text",
+    "_meta": {
+      "title": "⚙️ CR Prompt Text"
+    }
+  }
+}

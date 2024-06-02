@@ -1,0 +1,189 @@
+{
+  "last_node_id": 5,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 5,
+      "type": "CR Prompt Text",
+      "pos": [
+        186,
+        365
+      ],
+      "size": {
+        "0": 400,
+        "1": 200
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            7
+          ],
+          "shape": 3
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Prompt Text"
+      },
+      "widgets_values": [
+        "prompt2"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "show_text_party",
+      "pos": [
+        1047,
+        223
+      ],
+      "size": {
+        "0": 315,
+        "1": 76
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 8,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "show_text_party"
+      },
+      "widgets_values": [
+        "",
+        "placeholder"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "high_workflow_caller",
+      "pos": [
+        666,
+        185
+      ],
+      "size": {
+        "0": 277.20001220703125,
+        "1": 126
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "_way_in",
+          "type": "HIGHWAY_PIPE",
+          "link": null
+        },
+        {
+          "name": "+data:STRING",
+          "type": "STRING",
+          "link": 7,
+          "shape": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_way_out",
+          "type": "HIGHWAY_PIPE",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "STRING:-data",
+          "type": "STRING",
+          "links": [
+            8
+          ],
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "high_workflow_caller"
+      },
+      "widgets_values": [
+        ">data; <data",
+        "test_workflow.json",
+        null
+      ]
+    }
+  ],
+  "links": [
+    [
+      7,
+      5,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      8,
+      4,
+      1,
+      2,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.2100000000000009,
+      "offset": [
+        -155.6732752260926,
+        -82.69802638702215
+      ]
+    },
+    "0246.__NAME__": {
+      "4": {
+        "inputs": {
+          "0": {
+            "name": "_way_in",
+            "type": "HIGHWAY_PIPE"
+          },
+          "1": {
+            "name": "+data",
+            "type": "*"
+          }
+        },
+        "outputs": {
+          "0": {
+            "name": "_way_out",
+            "type": "HIGHWAY_PIPE"
+          },
+          "1": {
+            "name": "-data",
+            "type": "*"
+          }
+        }
+      }
+    }
+  },
+  "version": 0.4
+}

@@ -90,18 +90,20 @@ class Highend:
         #     all_results["response"] = text_results
         # return {"ui": all_results}
 
-        response = {"ui": {"response": []}}
+        response_list = []
 
-        # Iterate over kwargs
+        # Iterate over the kwargs to find keys that start with '+'
         for key, value in kwargs.items():
-            # Check if the key starts with '+'
             if key.startswith('+'):
-                # Split the key into components
-                _, data_type = key.split(':')
-                # Append the parsed data to the response list
-                response["ui"]["response"].append({"data": {"data": value, "type": data_type}})
+                # Extract the key and type from the kwargs key
+                parts = key[1:].split(':')
+                if len(parts) == 2:
+                    data_key, data_type = parts
+                    # Append the formatted data to the response list
+                    response_list.append({data_key: {"data": value, "type": data_type}})
 
-        return response
+        # Return the structured response
+        return {"ui": {"response": response_list}}
     @classmethod
     def IS_CHANGED(cls, *args, **kwargs):
         return lib0246.check_update(kwargs["_query"])

@@ -1,0 +1,40 @@
+{
+  "1": {
+    "inputs": {
+      "prompt": "prompt"
+    },
+    "class_type": "CR Prompt Text",
+    "_meta": {
+      "title": "⚙️ CR Prompt Text"
+    }
+  },
+  "2": {
+    "inputs": {
+      "prompt": "prompt"
+    },
+    "class_type": "CR Prompt Text",
+    "_meta": {
+      "title": "⚙️ CR Prompt Text"
+    }
+  },
+  "3": {
+    "inputs": {
+      "_query": {
+        "data": ">data_key1;>data_key2",
+        "update": "lwxldtk7s5jqcfkw13"
+      },
+      "+data_key1:STRING": [
+        "1",
+        0
+      ],
+      "+data_key2:STRING": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "jtong.Highend",
+    "_meta": {
+      "title": "Highend"
+    }
+  }
+}

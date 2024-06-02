@@ -14,6 +14,9 @@ app.registerExtension({
 				case "jtong.Highend": {
 					highend.highway_impl(nodeType, nodeData, app, LiteGraph.CIRCLE_SHAPE, LiteGraph.CIRCLE_SHAPE);
 				} break;
+				case "high_workflow_caller": {
+					highend.highway_impl(nodeType, nodeData, app, LiteGraph.CIRCLE_SHAPE, LiteGraph.CIRCLE_SHAPE);
+				} break;
 			}
 		}
 	},

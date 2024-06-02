@@ -1,0 +1,250 @@
+{
+  "last_node_id": 6,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "show_text_party",
+      "pos": [
+        1086,
+        173
+      ],
+      "size": {
+        "0": 315,
+        "1": 76
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 13,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "show_text_party"
+      },
+      "widgets_values": [
+        "",
+        "prompt2x"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "show_text_party",
+      "pos": [
+        1096,
+        420
+      ],
+      "size": {
+        "0": 315,
+        "1": 76
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 14,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "show_text_party"
+      },
+      "widgets_values": [
+        "",
+        "https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes/wiki/Core-Nodes#cr-prompt-text"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "CR Prompt Text",
+      "pos": [
+        -27,
+        245
+      ],
+      "size": {
+        "0": 400,
+        "1": 200
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            12
+          ],
+          "shape": 3
+        },
+        {
+          "name": "show_help",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CR Prompt Text"
+      },
+      "widgets_values": [
+        "prompt2x"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "high_workflow_caller",
+      "pos": [
+        507,
+        240
+      ],
+      "size": {
+        "0": 277.20001220703125,
+        "1": 170
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "_way_in",
+          "type": "HIGHWAY_PIPE",
+          "link": null
+        },
+        {
+          "name": "+data:STRING",
+          "type": "STRING",
+          "link": 12,
+          "shape": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "_way_out",
+          "type": "HIGHWAY_PIPE",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "STRING:-data_key1",
+          "type": "STRING",
+          "links": [
+            13
+          ],
+          "shape": 3
+        },
+        {
+          "name": "STRING:-data_key2",
+          "type": "STRING",
+          "links": [
+            14
+          ],
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "high_workflow_caller"
+      },
+      "widgets_values": [
+        ">data; <data_key1; <data_key2;",
+        "test_workflow_2_output.json",
+        "test_workflow_2_output_signature.json",
+        null
+      ]
+    }
+  ],
+  "links": [
+    [
+      12,
+      5,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      13,
+      4,
+      1,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      14,
+      4,
+      2,
+      6,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.2100000000000009,
+      "offset": [
+        -129.35289815997697,
+        -68.68717927958416
+      ]
+    },
+    "0246.__NAME__": {
+      "4": {
+        "inputs": {
+          "0": {
+            "name": "_way_in",
+            "type": "HIGHWAY_PIPE"
+          },
+          "1": {
+            "name": "+data",
+            "type": "*"
+          }
+        },
+        "outputs": {
+          "0": {
+            "name": "_way_out",
+            "type": "HIGHWAY_PIPE"
+          },
+          "1": {
+            "name": "-data_key1",
+            "type": "*"
+          },
+          "2": {
+            "name": "-data_key2",
+            "type": "*"
+          }
+        }
+      }
+    }
+  },
+  "version": 0.4
+}
