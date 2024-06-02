@@ -8,68 +8,12 @@ import websocket  # NOTE: websocket-client (https://github.com/websocket-client/
 
 from ...config import current_dir_path
 
-# server_address = "127.0.0.1:8189"
 client_id = str(uuid.uuid4())
 
 
 
 
 def api(prompt):
-#     prompt = json.loads("""{
-#   "8": {
-#     "inputs": {
-#       "text": [
-#         "15",
-#         0
-#       ]
-#     },
-#     "class_type": "show_text_party",
-#     "_meta": {
-#       "title": "显示文本(show_text)"
-#     }
-#   },
-#   "15": {
-#     "inputs": {
-#       "prompt": "promptssxx"
-#     },
-#     "class_type": "CR Prompt Text",
-#     "_meta": {
-#       "title": "⚙️ CR Prompt Text"
-#     }
-#   }
-# }""")
-#     prompt["15"]["inputs"]["prompt"] = "Hello Prompt"
-
-#     prompt = json.loads("""
-# {
-#   "1": {
-#     "inputs": {
-#       "_query": {
-#         "data": ">data;",
-#         "update": "lwx58zq4ci9dtn0bckh"
-#       },
-#       "+data:STRING": [
-#         "2",
-#         0
-#       ]
-#     },
-#     "class_type": "jtong.Highend",
-#     "_meta": {
-#       "title": "Highend"
-#     }
-#   },
-#   "2": {
-#     "inputs": {
-#       "prompt": "prompt"
-#     },
-#     "class_type": "CR Prompt Text",
-#     "_meta": {
-#       "title": "⚙️ CR Prompt Text"
-#     }
-#   }
-# }
-#     """)
-#     prompt["2"]["inputs"]["prompt"] = "Hello Prompt"
 
     server_address = "127.0.0.1:8178"
 
@@ -98,10 +42,7 @@ def api(prompt):
     with urllib.request.urlopen("http://{}/history/{}".format(server_address, prompt_id)) as response:
         history = json.loads(response.read())[prompt_id]
 
-    # print(history)
-    # print(json.dumps(history))
 
-    # output_text = history[prompt_id]["outputs"]["8"]["text"]
     output = []
 
     for o in history["outputs"]:
