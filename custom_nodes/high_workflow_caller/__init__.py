@@ -6,7 +6,7 @@ import uuid
 
 import websocket  # NOTE: websocket-client (https://github.com/websocket-client/websocket-client)
 
-from ..config import current_dir_path
+from ...config import current_dir_path
 
 # server_address = "127.0.0.1:8189"
 client_id = str(uuid.uuid4())
